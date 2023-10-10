@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	*::selection {
+		@apply bg-secondary text-primary;
+		opacity: 1;
+	}
+
+	* {
+		box-sizing: border-box;
+		overscroll-behavior: none;
+	}
+
+	/* For webkit-based browsers (Chrome, Safari) */
+	::-webkit-scrollbar {
+		width: 8px;
+		height: 8px;
+	}
+
+	::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	::-webkit-scrollbar-thumb {
+		background: #ffffff4a;
+		border-radius: 9999px;
+	}
+
+	/* For Firefox */
+	html {
+		scrollbar-width: thin;
+	}
+
+	html {
+		scrollbar-color: #ffffff4a transparent;
+	}
+}
