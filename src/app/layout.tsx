@@ -1,8 +1,8 @@
 import "./globals.css"
 
 export const metadata = {
-	title: "highchat",
-	description: "send a message to your high school",
+	title: "president game",
+	description: "ai-powered presidential election simulator",
 	metadataBase: new URL("https://highchat.vercel.app"),
 }
 
