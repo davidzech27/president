@@ -34,11 +34,15 @@ export default function General({ gameId, role, dialogueId, players }: Props) {
 
 	const [responseInput, setResponseInput] = useState("")
 
-	const [secondsLeft, setSecondsLeft] = useState(dialogue.question ? 30 : 10)
+	const [secondsLeft, setSecondsLeft] = useState<number | undefined>(
+		dialogue.question ? 30 : 10
+	)
 
-	const [submitting, setSubmitting] = useState(false)
+	useEffect(() => {
+		setSecondsLeft(dialogue.question ? 30 : 10)
+	}, [dialogue])
 
-	const [submitted, setSubmitted] = useState(false)
+	const submitting = secondsLeft === undefined && dialogue.question
 
 	useEffect(() => {
 		const submitAt = new Date(
@@ -63,30 +67,24 @@ export default function General({ gameId, role, dialogueId, players }: Props) {
 	}, [dialogue])
 
 	useEffect(() => {
-		console.log({ secondsLeft })
-
-		if (secondsLeft <= 0 && !submitted) {
-			setSubmitted(true)
-
-			if (dialogue.question) setSubmitting(true)
+		if (secondsLeft !== undefined && secondsLeft <= 0) {
+			setSecondsLeft(undefined)
 
 			void continueDialogueAction({
 				gameId,
 				dialogueId,
-				stage: "Primary",
+				stage: "General",
 				response: dialogue.question ? responseInput : undefined,
-			}).finally(() => {
-				setSubmitting(false)
-
-				setSubmitted(false)
 			})
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [secondsLeft, gameId, dialogueId, dialogue, responseInput])
 
 	const isWinner =
-		(players.Democratic >= players.Republican && party === "Democratic") ||
-		(players.Democratic < players.Republican && party === "Republican")
+		(players.Democratic.portion >= players.Democratic.portion &&
+			party === "Democratic") ||
+		(players.Democratic.portion < players.Republican.portion &&
+			party === "Republican")
 
 	const content = (
 		"content" in dialogue
@@ -123,7 +121,7 @@ export default function General({ gameId, role, dialogueId, players }: Props) {
 	return (
 		<Container>
 			<Header
-				secondsLeft={secondsLeft}
+				secondsLeft={secondsLeft ?? 0}
 				leftPoints={Math.round(
 					players.Democratic.portion * GENERAL_ELECTORAL_VOTES
 				)}

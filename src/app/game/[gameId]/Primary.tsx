@@ -47,11 +47,15 @@ export default function Primary({ gameId, role, dialogueId, players }: Props) {
 
 	const [responseInput, setResponseInput] = useState("")
 
-	const [secondsLeft, setSecondsLeft] = useState(dialogue.question ? 30 : 10)
+	const [secondsLeft, setSecondsLeft] = useState<number | undefined>(
+		dialogue.question ? 30 : 10
+	)
 
-	const [submitting, setSubmitting] = useState(false)
+	useEffect(() => {
+		setSecondsLeft(dialogue.question ? 30 : 10)
+	}, [dialogue])
 
-	const [submitted, setSubmitted] = useState(false)
+	const submitting = secondsLeft === undefined && dialogue.question
 
 	useEffect(() => {
 		const submitAt = new Date(
@@ -76,22 +80,14 @@ export default function Primary({ gameId, role, dialogueId, players }: Props) {
 	}, [dialogue])
 
 	useEffect(() => {
-		console.log({ secondsLeft })
-
-		if (secondsLeft <= 0 && !submitted) {
-			setSubmitted(true)
-
-			if (dialogue.question) setSubmitting(true)
+		if (secondsLeft !== undefined && secondsLeft <= 0) {
+			setSecondsLeft(undefined)
 
 			void continueDialogueAction({
 				gameId,
 				dialogueId,
 				stage: "Primary",
 				response: dialogue.question ? responseInput : undefined,
-			}).finally(() => {
-				setSubmitting(false)
-
-				setSubmitted(false)
 			})
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -100,8 +96,9 @@ export default function Primary({ gameId, role, dialogueId, players }: Props) {
 	const isIncumbent = role.includes("Incumbent")
 
 	const isWinner =
-		(players.Incumbent >= players.Newcomer && isIncumbent) ||
-		(players.Incumbent < players.Newcomer && !isIncumbent)
+		(players.Incumbent.portion >= players.Newcomer.portion &&
+			isIncumbent) ||
+		(players.Incumbent.portion < players.Newcomer.portion && !isIncumbent)
 
 	const content = (
 		"content" in dialogue
@@ -134,7 +131,7 @@ export default function Primary({ gameId, role, dialogueId, players }: Props) {
 	return (
 		<Container>
 			<Header
-				secondsLeft={secondsLeft}
+				secondsLeft={secondsLeft ?? 0}
 				leftPoints={Math.round(
 					players.Incumbent.portion * totalDelegates
 				)}

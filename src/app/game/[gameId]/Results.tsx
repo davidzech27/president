@@ -16,15 +16,16 @@ export default function Results({ gameId, players }: Props) {
 
 	return (
 		<Container>
-			<div className="mobile:text-2xl text-4xl font-bold text-white">
+			<div className="text-4xl font-bold text-white mobile:text-2xl">
 				{players.Democratic.portion >= players.Republican.portion
 					? players.Democratic.name
 					: players.Republican.name}{" "}
 				won the election with{" "}
-				{(players.Democratic.portion >= players.Republican.portion
-					? players.Democratic.portion
-					: players.Republican.portion) *
-					GENERAL_ELECTORAL_VOTES}{" "}
+				{Math.round(
+					(players.Democratic.portion >= players.Republican.portion
+						? players.Democratic.portion
+						: players.Republican.portion) * GENERAL_ELECTORAL_VOTES
+				)}{" "}
 				electoral votes!
 			</div>
 		</Container>

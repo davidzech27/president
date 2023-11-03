@@ -204,15 +204,15 @@ export default async function GamePage({ params }: { params: unknown }) {
 								stage: "Unstarted",
 								players,
 						  }
-						: gameRow.primaryDialogueId !== null
+						: gameRow.generalDialogueId === null
 						? {
 								stage: "Primary",
-								dialogueId: gameRow.primaryDialogueId,
+								dialogueId: gameRow.primaryDialogueId ?? -1, // not sure why unable to narrow
 								players: primaryPlayers,
 						  }
 						: {
 								stage: "General",
-								dialogueId: gameRow.generalDialogueId ?? -1, // not sure why unable to narrow
+								dialogueId: gameRow.generalDialogueId,
 								players: generalPlayers,
 						  }
 					: {
