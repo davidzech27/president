@@ -53,12 +53,15 @@ const continueDialogueAction = zact(
 
 		if (isNextDialogue) {
 			await Promise.all([
-				db.update(game).set({
-					[{
-						Primary: "primaryDialogueId",
-						General: "generalDialogueId",
-					}[stage]]: dialogueId + 1,
-				}),
+				db
+					.update(game)
+					.set({
+						[{
+							Primary: "primaryDialogueId",
+							General: "generalDialogueId",
+						}[stage]]: dialogueId + 1,
+					})
+					.where(eq(game.id, gameId)),
 				db
 					.insert(question)
 					.values({
@@ -76,13 +79,19 @@ const continueDialogueAction = zact(
 					.onConflictDoNothing(),
 			])
 		} else if (stage === "Primary") {
-			await db.update(game).set({
-				generalDialogueId: 1,
-			})
+			await db
+				.update(game)
+				.set({
+					generalDialogueId: 1,
+				})
+				.where(eq(game.id, gameId))
 		} else if (stage === "General") {
-			await db.update(game).set({
-				finished: true,
-			})
+			await db
+				.update(game)
+				.set({
+					finished: true,
+				})
+				.where(eq(game.id, gameId))
 		}
 
 		revalidatePath(`/game/${gameId}`)
@@ -177,21 +186,20 @@ const continueDialogueAction = zact(
 					.set({
 						primaryDialogueId: dialogueId + 1,
 					})
-					.where(eq(question.gameId, gameId)),
+					.where(eq(game.id, gameId)),
+				db
+					.insert(question)
+					.values({
+						gameId,
+						election: {
+							Democratic: "DemocraticPrimary" as const,
+							Republican: "RepublicanPrimary" as const,
+						}[party],
+						dialogueId: dialogueId + 1,
+						presentedAt: new Date(),
+					})
+					.onConflictDoNothing(),
 			])
-
-			await db
-				.insert(question)
-				.values({
-					gameId,
-					election: {
-						Democratic: "DemocraticPrimary" as const,
-						Republican: "RepublicanPrimary" as const,
-					}[party],
-					dialogueId: dialogueId + 1,
-					presentedAt: new Date(),
-				})
-				.onConflictDoNothing()
 
 			await updateGame({ gameId })
 		} else if (stage === "General") {
@@ -258,19 +266,19 @@ const continueDialogueAction = zact(
 					.set({
 						generalDialogueId: dialogueId + 1,
 					})
-					.where(eq(question.gameId, gameId)),
+					.where(eq(game.id, gameId)),
+				db
+					.insert(question)
+					.values({
+						gameId,
+						election: "General",
+						dialogueId: dialogueId + 1,
+						presentedAt: new Date(),
+					})
+					.onConflictDoNothing(),
 			])
 
-			await db
-				.insert(question)
-				.values({
-					gameId,
-					election: "General",
-					dialogueId: dialogueId + 1,
-					presentedAt: new Date(),
-				})
-				.onConflictDoNothing(),
-				await updateGame({ gameId })
+			await updateGame({ gameId })
 		}
 	}
 })
