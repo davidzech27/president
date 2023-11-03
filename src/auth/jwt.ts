@@ -4,12 +4,17 @@ import { z } from "zod"
 
 import env from "~/env.mjs"
 
-const authorizationCookieKey = "Authorization2"
+const authorizationCookieKey = "Authorization"
 
 const accessTokenPayloadSchema = z.object({
-	id: z.number(),
-	firstName: z.string(),
-	lastName: z.string(),
+	gameId: z.string(),
+	role: z.enum([
+		"DemocraticIncumbent",
+		"DemocraticNewcomer",
+		"RepublicanIncumbent",
+		"RepublicanNewcomer",
+	]),
+	name: z.string(),
 })
 
 const encodeAccessToken = async (

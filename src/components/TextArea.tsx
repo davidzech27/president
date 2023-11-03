@@ -1,3 +1,5 @@
+import ExpandingTextArea from "react-expanding-textarea"
+
 import cn from "~/util/cn"
 
 interface Props {
@@ -10,7 +12,7 @@ interface Props {
 	className?: string
 }
 
-export default function TextInput({
+export default function TextArea({
 	input,
 	setInput,
 	required,
@@ -20,8 +22,7 @@ export default function TextInput({
 	className,
 }: Props) {
 	return (
-		<input
-			type="text"
+		<ExpandingTextArea
 			value={input}
 			onChange={(e) => setInput(e.target.value)}
 			required={required}

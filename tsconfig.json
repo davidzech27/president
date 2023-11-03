@@ -28,13 +28,15 @@
 		"disableReferencedProjectLoad": true
 	},
 	"include": [
+		".eslintrc.cjs",
 		"next-env.d.ts",
+		"next.config.js",
+		"reset.d.ts",
 		"**/*.ts",
 		"**/*.tsx",
 		"**/*.cjs",
 		"**/*.mjs",
-		".next/types/**/*.ts",
-		"reset.d.ts"
+		".next/types/**/*.ts"
 	],
 	"exclude": ["node_modules"]
 }

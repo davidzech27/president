@@ -9,6 +9,10 @@
 	}
 
 	* {
+		caret-color: white;
+	}
+
+	* {
 		box-sizing: border-box;
 		overscroll-behavior: none;
 	}
