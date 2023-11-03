@@ -45,8 +45,8 @@ const joinGameAction = zact(z.object({ gameId: z.string(), name: z.string() }))(
 				})
 
 				return role
-			},
-			{ behavior: "immediate" }
+			}
+			//! { behavior: "immediate" }
 		)
 
 		await setAuth({
