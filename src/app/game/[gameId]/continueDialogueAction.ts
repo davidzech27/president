@@ -178,19 +178,20 @@ const continueDialogueAction = zact(
 						primaryDialogueId: dialogueId + 1,
 					})
 					.where(eq(question.gameId, gameId)),
-				db
-					.insert(question)
-					.values({
-						gameId,
-						election: {
-							Democratic: "DemocraticPrimary" as const,
-							Republican: "RepublicanPrimary" as const,
-						}[party],
-						dialogueId: dialogueId + 1,
-						presentedAt: new Date(),
-					})
-					.onConflictDoNothing(),
 			])
+
+			await db
+				.insert(question)
+				.values({
+					gameId,
+					election: {
+						Democratic: "DemocraticPrimary" as const,
+						Republican: "RepublicanPrimary" as const,
+					}[party],
+					dialogueId: dialogueId + 1,
+					presentedAt: new Date(),
+				})
+				.onConflictDoNothing()
 
 			await updateGame({ gameId })
 		} else if (stage === "General") {
@@ -258,18 +259,18 @@ const continueDialogueAction = zact(
 						generalDialogueId: dialogueId + 1,
 					})
 					.where(eq(question.gameId, gameId)),
-				db
-					.insert(question)
-					.values({
-						gameId,
-						election: "General",
-						dialogueId: dialogueId + 1,
-						presentedAt: new Date(),
-					})
-					.onConflictDoNothing(),
 			])
 
-			await updateGame({ gameId })
+			await db
+				.insert(question)
+				.values({
+					gameId,
+					election: "General",
+					dialogueId: dialogueId + 1,
+					presentedAt: new Date(),
+				})
+				.onConflictDoNothing(),
+				await updateGame({ gameId })
 		}
 	}
 })
