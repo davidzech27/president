@@ -54,7 +54,7 @@ export default function General({ gameId, role, dialogueId, players }: Props) {
 				(submitAt.valueOf() - new Date().valueOf()) / 1000
 			)
 
-			setSecondsLeft(secondsLeft)
+			setSecondsLeft(Math.max(secondsLeft, 0))
 		}
 
 		updateSecondsLeft()
@@ -67,7 +67,7 @@ export default function General({ gameId, role, dialogueId, players }: Props) {
 	}, [dialogue])
 
 	useEffect(() => {
-		if (secondsLeft !== undefined && secondsLeft <= 0) {
+		if (secondsLeft !== undefined && secondsLeft === 0) {
 			setSecondsLeft(undefined)
 
 			void continueDialogueAction({

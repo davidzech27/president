@@ -28,6 +28,10 @@ export default function Question({
 		}
 	}, [])
 
+	useEffect(() => {
+		setResponseInput("")
+	}, [content, setResponseInput])
+
 	return !submitting ? (
 		<div className="flex h-full flex-col justify-between p-6">
 			<p className="text-2xl font-semibold leading-relaxed text-white mobile:text-xl">
