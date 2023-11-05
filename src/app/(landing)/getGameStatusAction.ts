@@ -1,13 +1,13 @@
 "use server"
-import { zact } from "zact/server"
 import { z } from "zod"
 import { unstable_noStore as noStore } from "next/cache"
 import { eq, sql } from "drizzle-orm"
 
+import validate from "~/util/validate"
 import db from "~/database/db"
 import { player } from "~/database/schema"
 
-const getGameStatusAction = zact(z.object({ gameId: z.string() }))(
+const getGameStatusAction = validate(z.object({ gameId: z.string() }))(
 	async ({ gameId }) => {
 		noStore()
 

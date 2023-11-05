@@ -1,5 +1,6 @@
+import { useEffect } from "react"
 import Container from "~/components/Container"
-import useSubscribeToGameUpdates from "~/update/useSubscribeToGameUpdates"
+import useGameUpdates from "~/update/useGameUpdates"
 
 interface Props {
 	gameId: string
@@ -12,7 +13,11 @@ interface Props {
 }
 
 export default function WaitingForPlayers({ gameId, players }: Props) {
-	useSubscribeToGameUpdates({ gameId })
+	const updateGame = useGameUpdates({ gameId })
+
+	useEffect(() => {
+		void updateGame()
+	}, [updateGame])
 
 	return (
 		<Container>

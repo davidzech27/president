@@ -1,6 +1,6 @@
 "use client"
 import { GENERAL_ELECTORAL_VOTES } from "~/dialogue/General"
-import useSubscribeToGameUpdates from "~/update/useSubscribeToGameUpdates"
+import useGameUpdates from "~/update/useGameUpdates"
 import Container from "~/components/Container"
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function Results({ gameId, players }: Props) {
-	useSubscribeToGameUpdates({ gameId })
+	useGameUpdates({ gameId })
 
 	return (
 		<Container>

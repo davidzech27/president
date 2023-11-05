@@ -1,4 +1,4 @@
-export const GENERAL_ELECTORAL_VOTES = 2469
+export const GENERAL_ELECTORAL_VOTES = 538
 
 export const GENERAL_QUESTION_COUNT = 8
 

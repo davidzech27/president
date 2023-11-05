@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import GeneralDialogue, { GENERAL_ELECTORAL_VOTES } from "~/dialogue/General"
 
 import continueDialogueAction from "./continueDialogueAction"
-import useSubscribeToGameUpdates from "~/update/useSubscribeToGameUpdates"
+import useGameUpdates from "~/update/useGameUpdates"
 import Container from "~/components/Container"
 import Header from "./Header"
 import Question from "./Question"
@@ -24,7 +24,7 @@ interface Props {
 }
 
 export default function General({ gameId, role, dialogueId, players }: Props) {
-	useSubscribeToGameUpdates({ gameId })
+	const updateGame = useGameUpdates({ gameId })
 
 	const party = role.startsWith("Democratic") ? "Democratic" : "Republican"
 
@@ -54,7 +54,9 @@ export default function General({ gameId, role, dialogueId, players }: Props) {
 				(submitAt.valueOf() - new Date().valueOf()) / 1000
 			)
 
-			setSecondsLeft(Math.max(secondsLeft, 0))
+			setSecondsLeft((prevSecondsLeft) =>
+				prevSecondsLeft === undefined ? undefined : secondsLeft
+			)
 		}
 
 		updateSecondsLeft()
@@ -75,7 +77,7 @@ export default function General({ gameId, role, dialogueId, players }: Props) {
 				dialogueId,
 				stage: "General",
 				response: dialogue.question ? responseInput : undefined,
-			})
+			}).then(updateGame)
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [secondsLeft, gameId, dialogueId, dialogue, responseInput])

@@ -8,7 +8,7 @@ import RepublicanPrimaryDialogue, {
 	REPUBLICAN_PRIMARY_DELEGATE_VOTES,
 } from "~/dialogue/RepublicanPrimary"
 import continueDialogueAction from "./continueDialogueAction"
-import useSubscribeToGameUpdates from "~/update/useSubscribeToGameUpdates"
+import useGameUpdates from "~/update/useGameUpdates"
 import Container from "~/components/Container"
 import Header from "./Header"
 import Message from "./Message"
@@ -29,7 +29,13 @@ interface Props {
 }
 
 export default function Primary({ gameId, role, dialogueId, players }: Props) {
-	useSubscribeToGameUpdates({ gameId })
+	const updateGame = useGameUpdates({ gameId })
+
+	useEffect(() => {
+		if (dialogueId !== 1) return
+
+		void updateGame()
+	}, [updateGame, dialogueId])
 
 	const party = role.startsWith("Democratic") ? "Democratic" : "Republican"
 
@@ -67,7 +73,9 @@ export default function Primary({ gameId, role, dialogueId, players }: Props) {
 				(submitAt.valueOf() - new Date().valueOf()) / 1000
 			)
 
-			setSecondsLeft(Math.max(secondsLeft, 0))
+			setSecondsLeft((prevSecondsLeft) =>
+				prevSecondsLeft === undefined ? undefined : secondsLeft
+			)
 		}
 
 		updateSecondsLeft()
@@ -81,6 +89,7 @@ export default function Primary({ gameId, role, dialogueId, players }: Props) {
 
 	useEffect(() => {
 		console.log({ secondsLeft })
+
 		if (secondsLeft !== undefined && secondsLeft === 0) {
 			setSecondsLeft(undefined)
 
@@ -89,7 +98,7 @@ export default function Primary({ gameId, role, dialogueId, players }: Props) {
 				dialogueId,
 				stage: "Primary",
 				response: dialogue.question ? responseInput : undefined,
-			})
+			}).then(updateGame)
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [secondsLeft, gameId, dialogueId, dialogue, responseInput])

@@ -1,14 +1,13 @@
 "use server"
-import { zact } from "zact/server"
 import { z } from "zod"
 import { revalidatePath, unstable_noStore as noStore } from "next/cache"
 import { cookies } from "next/headers"
 import { and, eq } from "drizzle-orm"
 
+import validate from "~/util/validate"
 import { getAuthOrThrow } from "~/auth/jwt"
 import db from "~/database/db"
 import { game, question } from "~/database/schema"
-import updateGame from "~/update/updateGame"
 import DemocraticPrimaryDialogue, {
 	DEMOCRATIC_PRIMARY_QUESTION_COUNT,
 } from "~/dialogue/DemocraticPrimary"
@@ -19,7 +18,7 @@ import GeneralDialogue, { GENERAL_QUESTION_COUNT } from "~/dialogue/General"
 
 // assumes that neither election begins or ends with a question
 
-const continueDialogueAction = zact(
+const continueDialogueAction = validate(
 	z.object({
 		gameId: z.string(),
 		dialogueId: z.number(),
@@ -132,7 +131,7 @@ const continueDialogueAction = zact(
 				? questionRow?.newcomerResponse
 				: questionRow?.incumbentResponse
 
-			console.log({ questionRow, party, response, otherResponse }) //!
+			console.log({ role, questionRow })
 
 			if (otherResponse === undefined) return
 
@@ -200,8 +199,6 @@ const continueDialogueAction = zact(
 					})
 					.onConflictDoNothing(),
 			])
-
-			await updateGame({ gameId })
 		} else if (stage === "General") {
 			const [questionRow] = await db
 				.update(question)
@@ -277,8 +274,6 @@ const continueDialogueAction = zact(
 					})
 					.onConflictDoNothing(),
 			])
-
-			await updateGame({ gameId })
 		}
 	}
 })

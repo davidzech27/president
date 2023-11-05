@@ -34,7 +34,7 @@ export default function Landing() {
 				president
 			</h1>
 
-			<h2 className="mobile:text-2xl text-center text-4xl font-bold text-secondary">
+			<h2 className="text-center text-4xl font-bold text-secondary mobile:text-2xl">
 				play an ai-powered presedential election simulator
 			</h2>
 
