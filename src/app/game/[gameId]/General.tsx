@@ -85,7 +85,7 @@ export default function General({ gameId, role, dialogueId, players }: Props) {
 	}, [secondsLeft, gameId, dialogueId, dialogue, responseInput])
 
 	const isWinner =
-		(players.Democratic.portion >= players.Democratic.portion &&
+		(players.Democratic.portion >= players.Republican.portion &&
 			party === "Democratic") ||
 		(players.Democratic.portion < players.Republican.portion &&
 			party === "Republican")
