@@ -74,7 +74,7 @@ You have had reasonable success in your first primaries and are approaching Supe
 	},
 	{
 		id: 9,
-		content: `In an effort to provide families choice on what type of education system their children go to, be it private, public, or homeschooled, Alabama has instituted a policy that gives parents $6,900 for each child for the 2024-2025 school year. Is this an effective use of the educational budget and how would you allocate money to give parents a choice on what educational institutions their children go to?`,
+		content: `In an effort to provide families choice on what type of education system their children go to, be it private, public, or homeschooled, Alabama has instituted a policy that gives parents $6,900 for each child for the 2024-2025 school year. Is this an effective use of the educational budget? How would you allocate money to give parents a choice on what educational institutions their children go to?`,
 		question: true,
 		state: "Alabama",
 	},
