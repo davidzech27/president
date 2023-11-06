@@ -1,6 +1,6 @@
 export const GENERAL_ELECTORAL_VOTES = 538
 
-export const GENERAL_QUESTION_COUNT = 8
+export const GENERAL_QUESTION_COUNT = 9
 
 const GeneralDialogue: ({
 	id: number
