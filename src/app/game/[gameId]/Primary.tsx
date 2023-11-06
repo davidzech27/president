@@ -74,7 +74,9 @@ export default function Primary({ gameId, role, dialogueId, players }: Props) {
 			)
 
 			setSecondsLeft((prevSecondsLeft) =>
-				prevSecondsLeft === undefined ? undefined : secondsLeft
+				prevSecondsLeft === undefined
+					? undefined
+					: Math.max(secondsLeft, 0)
 			)
 		}
 
@@ -88,8 +90,6 @@ export default function Primary({ gameId, role, dialogueId, players }: Props) {
 	}, [dialogue])
 
 	useEffect(() => {
-		console.log({ secondsLeft })
-
 		if (secondsLeft !== undefined && secondsLeft === 0) {
 			setSecondsLeft(undefined)
 

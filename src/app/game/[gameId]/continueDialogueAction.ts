@@ -61,21 +61,47 @@ const continueDialogueAction = validate(
 						}[stage]]: dialogueId + 1,
 					})
 					.where(eq(game.id, gameId)),
-				db
-					.insert(question)
-					.values({
-						gameId,
-						election: {
-							Primary: {
-								Democratic: "DemocraticPrimary" as const,
-								Republican: "RepublicanPrimary" as const,
-							}[party],
-							General: "General" as const,
-						}[stage],
-						dialogueId: dialogueId + 1,
-						presentedAt: new Date(),
-					})
-					.onConflictDoNothing(),
+				{
+					Primary: (async () =>
+						await Promise.all([
+							DemocraticPrimaryDialogue.find(
+								({ id }) => id === dialogueId + 1
+							)?.question &&
+								db
+									.insert(question)
+									.values({
+										gameId,
+										election: "DemocraticPrimary",
+										dialogueId: dialogueId + 1,
+										presentedAt: new Date(),
+									})
+									.onConflictDoNothing(),
+							RepublicanPrimaryDialogue.find(
+								({ id }) => id === dialogueId + 1
+							)?.question &&
+								db
+									.insert(question)
+									.values({
+										gameId,
+										election: "RepublicanPrimary",
+										dialogueId: dialogueId + 1,
+										presentedAt: new Date(),
+									})
+									.onConflictDoNothing(),
+						]))(),
+					General: (async () =>
+						GeneralDialogue.find(({ id }) => id === dialogueId + 1)
+							?.question &&
+						(await db
+							.insert(question)
+							.values({
+								gameId,
+								election: "General",
+								dialogueId: dialogueId + 1,
+								presentedAt: new Date(),
+							})
+							.onConflictDoNothing()))(),
+				}[stage],
 			])
 		} else if (stage === "Primary") {
 			await db
@@ -103,68 +129,16 @@ const continueDialogueAction = validate(
 		if (dialogue === undefined) throw new Error("Dialogue not found")
 
 		if (stage === "Primary") {
-			const [questionRow] = await db
-				.update(question)
-				.set({
-					[isIncumbent ? "incumbentResponse" : "newcomerResponse"]:
-						response,
-				})
-				.where(
-					and(
-						and(
-							eq(question.gameId, gameId),
-							eq(
-								question.election,
-								{
-									Democratic: "DemocraticPrimary" as const,
-									Republican: "RepublicanPrimary" as const,
-								}[party]
-							)
-						),
-						eq(question.dialogueId, dialogueId)
-					)
-				)
-				.returning()
-				.all()
-
-			const otherResponse = isIncumbent
-				? questionRow?.newcomerResponse
-				: questionRow?.incumbentResponse
-
-			console.log({ role, questionRow })
-
-			if (otherResponse === undefined) return
-
-			const { incumbentRating, newcomerRating } = {
-				incumbentRating: 5,
-				newcomerRating: 7,
-			}
-
-			const incumbentPortion =
-				incumbentRating /
-				(incumbentRating + newcomerRating) /
-				{
-					Democratic: DEMOCRATIC_PRIMARY_QUESTION_COUNT,
-					Republican: REPUBLICAN_PRIMARY_QUESTION_COUNT,
-				}[party]
-
-			const newcomerPortion =
-				newcomerRating /
-				(incumbentRating + newcomerRating) /
-				{
-					Democratic: DEMOCRATIC_PRIMARY_QUESTION_COUNT,
-					Republican: REPUBLICAN_PRIMARY_QUESTION_COUNT,
-				}[party]
-
-			await Promise.all([
-				db
-					.update(question)
-					.set({
-						incumbentPortion,
-						newcomerPortion,
-					})
-					.where(
-						and(
+			const responses = await db.transaction(async (tx) => {
+				const [[questionRow], [otherQuestionRow]] = await Promise.all([
+					tx
+						.update(question)
+						.set({
+							[isIncumbent
+								? "incumbentResponse"
+								: "newcomerResponse"]: response,
+						})
+						.where(
 							and(
 								eq(question.gameId, gameId),
 								eq(
@@ -175,8 +149,114 @@ const continueDialogueAction = validate(
 										Republican:
 											"RepublicanPrimary" as const,
 									}[party]
-								)
-							),
+								),
+								eq(question.dialogueId, dialogueId)
+							)
+						)
+						.returning()
+						.all(),
+					tx
+						.select()
+						.from(question)
+						.where(
+							and(
+								eq(question.gameId, gameId),
+								eq(
+									question.election,
+									{
+										Democratic:
+											"RepublicanPrimary" as const,
+										Republican:
+											"DemocraticPrimary" as const,
+									}[party]
+								),
+								eq(question.dialogueId, dialogueId)
+							)
+						),
+				])
+
+				return {
+					DemocraticIncumbent:
+						{
+							Democratic: questionRow?.incumbentResponse,
+							Republican: otherQuestionRow?.incumbentResponse,
+						}[party] ?? undefined,
+					DemocraticNewcomer:
+						{
+							Democratic: questionRow?.newcomerResponse,
+							Republican: otherQuestionRow?.newcomerResponse,
+						}[party] ?? undefined,
+					RepublicanIncumbent:
+						{
+							Democratic: otherQuestionRow?.incumbentResponse,
+							Republican: questionRow?.incumbentResponse,
+						}[party] ?? undefined,
+					RepublicanNewcomer:
+						{
+							Democratic: otherQuestionRow?.newcomerResponse,
+							Republican: questionRow?.newcomerResponse,
+						}[party] ?? undefined,
+				}
+			})
+
+			if (
+				responses.DemocraticIncumbent === undefined ||
+				responses.DemocraticNewcomer === undefined ||
+				responses.RepublicanIncumbent === undefined ||
+				responses.RepublicanNewcomer === undefined
+			)
+				return
+
+			const ratings = {
+				DemocraticIncumbent: 5,
+				DemocraticNewcomer: 7,
+				RepublicanIncumbent: 5,
+				RepublicanNewcomer: 7,
+			}
+
+			const portions = {
+				DemocraticIncumbent:
+					ratings.DemocraticIncumbent /
+					(ratings.DemocraticIncumbent + ratings.DemocraticNewcomer) /
+					DEMOCRATIC_PRIMARY_QUESTION_COUNT,
+				DemocraticNewcomer:
+					ratings.DemocraticNewcomer /
+					(ratings.DemocraticIncumbent + ratings.DemocraticNewcomer) /
+					DEMOCRATIC_PRIMARY_QUESTION_COUNT,
+				RepublicanIncumbent:
+					ratings.RepublicanIncumbent /
+					(ratings.RepublicanIncumbent + ratings.RepublicanNewcomer) /
+					REPUBLICAN_PRIMARY_QUESTION_COUNT,
+				RepublicanNewcomer:
+					ratings.RepublicanNewcomer /
+					(ratings.RepublicanIncumbent + ratings.RepublicanNewcomer) /
+					REPUBLICAN_PRIMARY_QUESTION_COUNT,
+			}
+
+			await Promise.all([
+				db
+					.update(question)
+					.set({
+						incumbentPortion: portions.DemocraticIncumbent,
+						newcomerPortion: portions.DemocraticNewcomer,
+					})
+					.where(
+						and(
+							eq(question.gameId, gameId),
+							eq(question.election, "DemocraticPrimary"),
+							eq(question.dialogueId, dialogueId)
+						)
+					),
+				db
+					.update(question)
+					.set({
+						incumbentPortion: portions.RepublicanIncumbent,
+						newcomerPortion: portions.RepublicanNewcomer,
+					})
+					.where(
+						and(
+							eq(question.gameId, gameId),
+							eq(question.election, "RepublicanPrimary"),
 							eq(question.dialogueId, dialogueId)
 						)
 					),
@@ -186,18 +266,30 @@ const continueDialogueAction = validate(
 						primaryDialogueId: dialogueId + 1,
 					})
 					.where(eq(game.id, gameId)),
-				db
-					.insert(question)
-					.values({
-						gameId,
-						election: {
-							Democratic: "DemocraticPrimary" as const,
-							Republican: "RepublicanPrimary" as const,
-						}[party],
-						dialogueId: dialogueId + 1,
-						presentedAt: new Date(),
-					})
-					.onConflictDoNothing(),
+				DemocraticPrimaryDialogue.find(
+					({ id }) => id === dialogueId + 1
+				)?.question &&
+					db
+						.insert(question)
+						.values({
+							gameId,
+							election: "DemocraticPrimary",
+							dialogueId: dialogueId + 1,
+							presentedAt: new Date(),
+						})
+						.onConflictDoNothing(),
+				RepublicanPrimaryDialogue.find(
+					({ id }) => id === dialogueId + 1
+				)?.question &&
+					db
+						.insert(question)
+						.values({
+							gameId,
+							election: "RepublicanPrimary",
+							dialogueId: dialogueId + 1,
+							presentedAt: new Date(),
+						})
+						.onConflictDoNothing(),
 			])
 		} else if (stage === "General") {
 			const [questionRow] = await db
@@ -210,51 +302,52 @@ const continueDialogueAction = validate(
 				})
 				.where(
 					and(
-						and(
-							eq(question.gameId, gameId),
-							eq(question.election, "General")
-						),
+						eq(question.gameId, gameId),
+						eq(question.election, "General"),
 						eq(question.dialogueId, dialogueId)
 					)
 				)
 				.returning()
 				.all()
 
-			const otherResponse = {
-				Democratic: questionRow?.republicanResponse,
-				Republican: questionRow?.democraticResponse,
-			}[party]
-
-			if (otherResponse === undefined) return
-
-			const { democraticRating, republicanRating } = {
-				democraticRating: 5,
-				republicanRating: 7,
+			const responses = {
+				Democratic: questionRow?.democraticResponse,
+				Republican: questionRow?.republicanResponse,
 			}
 
-			const democraticPortion =
-				democraticRating /
-				(democraticRating + republicanRating) /
-				GENERAL_QUESTION_COUNT
+			if (
+				responses.Democratic === undefined ||
+				responses.Republican === undefined
+			)
+				return
 
-			const republicanPortion =
-				republicanRating /
-				(democraticRating + republicanRating) /
-				GENERAL_QUESTION_COUNT
+			const ratings = {
+				Democratic: 5,
+				Republican: 7,
+			}
+
+			const portions = {
+				Democratic:
+					ratings.Democratic /
+					(ratings.Democratic + ratings.Republican) /
+					GENERAL_QUESTION_COUNT,
+				Republican:
+					ratings.Republican /
+					(ratings.Democratic + ratings.Republican) /
+					GENERAL_QUESTION_COUNT,
+			}
 
 			await Promise.all([
 				db
 					.update(question)
 					.set({
-						democraticPortion,
-						republicanPortion,
+						democraticPortion: portions.Democratic,
+						republicanPortion: portions.Republican,
 					})
 					.where(
 						and(
-							and(
-								eq(question.gameId, gameId),
-								eq(question.election, "General")
-							),
+							eq(question.gameId, gameId),
+							eq(question.election, "General"),
 							eq(question.dialogueId, dialogueId)
 						)
 					),
@@ -264,15 +357,17 @@ const continueDialogueAction = validate(
 						generalDialogueId: dialogueId + 1,
 					})
 					.where(eq(game.id, gameId)),
-				db
-					.insert(question)
-					.values({
-						gameId,
-						election: "General",
-						dialogueId: dialogueId + 1,
-						presentedAt: new Date(),
-					})
-					.onConflictDoNothing(),
+				GeneralDialogue.find(({ id }) => id === dialogueId + 1)
+					?.question &&
+					(await db
+						.insert(question)
+						.values({
+							gameId,
+							election: "General",
+							dialogueId: dialogueId + 1,
+							presentedAt: new Date(),
+						})
+						.onConflictDoNothing()),
 			])
 		}
 	}

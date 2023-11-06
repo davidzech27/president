@@ -36,7 +36,7 @@ export default function Header({
 			</div>
 
 			<div className="absolute right-8 text-xl font-bold text-white mobile:right-auto mobile:top-14">
-				{secondsLeft > 0 ? secondsLeft : 0} seconds left
+				{secondsLeft} seconds left
 			</div>
 		</div>
 	)

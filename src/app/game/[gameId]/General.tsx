@@ -55,7 +55,9 @@ export default function General({ gameId, role, dialogueId, players }: Props) {
 			)
 
 			setSecondsLeft((prevSecondsLeft) =>
-				prevSecondsLeft === undefined ? undefined : secondsLeft
+				prevSecondsLeft === undefined
+					? undefined
+					: Math.max(secondsLeft, 0)
 			)
 		}
 
