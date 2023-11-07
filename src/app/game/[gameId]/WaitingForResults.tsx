@@ -2,6 +2,7 @@
 import { GENERAL_ELECTORAL_VOTES } from "~/dialogue/General"
 import Container from "~/components/Container"
 import useGameUpdates from "~/update/useGameUpdates"
+import useGameChannelPromise from "~/update/useGameChannelPromise"
 
 interface Props {
 	gameId: string
@@ -12,7 +13,9 @@ interface Props {
 }
 
 export default function WaitingForResults({ gameId, players }: Props) {
-	useGameUpdates({ gameId })
+	const channelPromise = useGameChannelPromise({ gameId })
+
+	useGameUpdates({ channelPromise })
 
 	return (
 		<Container>

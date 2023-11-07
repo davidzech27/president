@@ -2,6 +2,7 @@
 import { GENERAL_ELECTORAL_VOTES } from "~/dialogue/General"
 import useGameUpdates from "~/update/useGameUpdates"
 import Container from "~/components/Container"
+import useGameChannelPromise from "~/update/useGameChannelPromise"
 
 interface Props {
 	gameId: string
@@ -12,7 +13,9 @@ interface Props {
 }
 
 export default function Results({ gameId, players }: Props) {
-	useGameUpdates({ gameId })
+	const channelPromise = useGameChannelPromise({ gameId })
+
+	useGameUpdates({ channelPromise })
 
 	return (
 		<Container>

@@ -6,6 +6,8 @@ interface Props {
 	content: string
 	responseInput: string
 	setResponseInput: (input: string) => void
+	otherName: string
+	otherResponse: string
 	submitting: boolean
 }
 
@@ -13,6 +15,8 @@ export default function Question({
 	content,
 	responseInput,
 	setResponseInput,
+	otherName,
+	otherResponse,
 	submitting,
 }: Props) {
 	const [dots, setDots] = useState(4)
@@ -38,14 +42,24 @@ export default function Question({
 				{content}
 			</p>
 
-			<TextArea
-				input={responseInput}
-				setInput={setResponseInput}
-				required
-				aria-label="your response"
-				placeholder="your response"
-				autoFocus
-			/>
+			<div className="space-y-6">
+				<p className="rounded-lg border border-white bg-white/20 px-3 py-2 text-lg font-medium text-white">
+					<span className="font-light opacity-50">
+						{otherName}&apos;s response:
+					</span>{" "}
+					{otherResponse || "(No response)"}
+				</p>
+
+				<TextArea
+					input={responseInput}
+					setInput={setResponseInput}
+					required
+					aria-label="your response"
+					placeholder="your response"
+					autoFocus
+					className="w-full"
+				/>
+			</div>
 		</div>
 	) : (
 		<div className="flex h-full flex-col justify-center p-6">

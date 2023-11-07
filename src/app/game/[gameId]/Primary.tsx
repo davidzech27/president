@@ -9,10 +9,12 @@ import RepublicanPrimaryDialogue, {
 } from "~/dialogue/RepublicanPrimary"
 import continueDialogueAction from "./continueDialogueAction"
 import useGameUpdates from "~/update/useGameUpdates"
+import useOpponentRealtimeResponse from "~/update/useOpponentRealtimeResponse"
 import Container from "~/components/Container"
 import Header from "./Header"
 import Message from "./Message"
 import Question from "./Question"
+import useGameChannelPromise from "~/update/useGameChannelPromise"
 
 interface Props {
 	gameId: string
@@ -36,7 +38,9 @@ export default function Primary({
 	players,
 	reaction,
 }: Props) {
-	const updateGame = useGameUpdates({ gameId })
+	const channelPromise = useGameChannelPromise({ gameId })
+
+	const updateGame = useGameUpdates({ channelPromise })
 
 	useEffect(() => {
 		if (dialogueId === 0) updateGame()
@@ -58,19 +62,42 @@ export default function Primary({
 
 	const [responseInput, setResponseInput] = useState("")
 
+	const [otherResponse, setOtherResponse] = useState("")
+
+	const updateResponse = useOpponentRealtimeResponse({
+		channelPromise,
+		role,
+		election: {
+			DemocraticIncumbent: "DemocraticPrimary" as const,
+			DemocraticNewcomer: "DemocraticPrimary" as const,
+			RepublicanIncumbent: "RepublicanPrimary" as const,
+			RepublicanNewcomer: "RepublicanPrimary" as const,
+		}[role],
+		onContent: setOtherResponse,
+	})
+
+	useEffect(() => {
+		setOtherResponse("")
+	}, [dialogueId])
+
+	useEffect(() => {
+		updateResponse(responseInput)
+	}, [updateResponse, responseInput])
+
 	const [secondsLeft, setSecondsLeft] = useState<number | undefined>(
 		dialogue.question ? 60 : dialogue.id === 0 ? 60 : 10
 	)
 
 	useEffect(() => {
 		setSecondsLeft(dialogue.question ? 60 : dialogue.id === 0 ? 60 : 10)
-	}, [dialogue])
+	}, [dialogue, reaction])
 
 	const submitting = secondsLeft === undefined && dialogue.question
 
 	useEffect(() => {
 		const submitAt = new Date(
-			new Date().valueOf() + (dialogue.question ? 30 : 10) * 1000
+			new Date().valueOf() +
+				(dialogue.question ? 60 : dialogue.id === 0 ? 60 : 10) * 1000
 		)
 
 		const updateSecondsLeft = () => {
@@ -92,7 +119,7 @@ export default function Primary({
 		return () => {
 			clearInterval(intervalId)
 		}
-	}, [dialogue])
+	}, [dialogue, reaction])
 
 	useEffect(() => {
 		if (secondsLeft !== undefined && secondsLeft === 0) {
@@ -104,7 +131,7 @@ export default function Primary({
 				stage: "Primary",
 				response:
 					dialogue.question && reaction === undefined
-						? responseInput
+						? responseInput || "(No response)"
 						: undefined,
 			}).then(updateGame)
 		}
@@ -166,6 +193,21 @@ export default function Primary({
 							content={content}
 							responseInput={responseInput}
 							setResponseInput={setResponseInput}
+							otherName={
+								players[
+									{
+										DemocraticIncumbent:
+											"Newcomer" as const,
+										DemocraticNewcomer:
+											"Incumbent" as const,
+										RepublicanIncumbent:
+											"Newcomer" as const,
+										RepublicanNewcomer:
+											"Incumbent" as const,
+									}[role]
+								].name
+							}
+							otherResponse={otherResponse}
 							submitting={submitting}
 						/>
 					) : (

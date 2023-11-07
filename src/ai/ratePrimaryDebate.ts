@@ -69,7 +69,7 @@ export default async function ratePrimaryDebate({
 
 Question: """${question}"""
 Incumbent candidate response: """${responses.Incumbent}"""
-Newcomer candidate response: """${responses.Incumbent}"""
+Newcomer candidate response: """${responses.Newcomer}"""
 
 Given that this is a ${party} debate in the state of ${state}, narrate the nation's reaction to what each candidate said. Then, assign each candidate a rating out of 10 as to how well their responses impacted their campaign to be the ${party} nominee.
 

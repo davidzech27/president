@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import Container from "~/components/Container"
+import useGameChannelPromise from "~/update/useGameChannelPromise"
 import useGameUpdates from "~/update/useGameUpdates"
 
 interface Props {
@@ -13,7 +14,9 @@ interface Props {
 }
 
 export default function WaitingForPlayers({ gameId, players }: Props) {
-	const updateGame = useGameUpdates({ gameId })
+	const channelPromise = useGameChannelPromise({ gameId })
+
+	const updateGame = useGameUpdates({ channelPromise })
 
 	useEffect(() => {
 		void updateGame()

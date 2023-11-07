@@ -61,7 +61,7 @@ const joinGameAction = validate(
 	if (role === "RepublicanNewcomer") {
 		await db
 			.update(game)
-			.set({ primaryDialogueId: 1 })
+			.set({ primaryDialogueId: 0 })
 			.where(eq(game.id, gameId))
 	}
 

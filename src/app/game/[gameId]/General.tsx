@@ -4,10 +4,12 @@ import GeneralDialogue, { GENERAL_ELECTORAL_VOTES } from "~/dialogue/General"
 
 import continueDialogueAction from "./continueDialogueAction"
 import useGameUpdates from "~/update/useGameUpdates"
+import useGameChannelPromise from "~/update/useGameChannelPromise"
 import Container from "~/components/Container"
 import Header from "./Header"
 import Question from "./Question"
 import Message from "./Message"
+import useOpponentRealtimeResponse from "~/update/useOpponentRealtimeResponse"
 
 interface Props {
 	gameId: string
@@ -31,7 +33,9 @@ export default function General({
 	players,
 	reaction,
 }: Props) {
-	const updateGame = useGameUpdates({ gameId })
+	const channelPromise = useGameChannelPromise({ gameId })
+
+	const updateGame = useGameUpdates({ channelPromise })
 
 	const party = role.startsWith("Democratic") ? "Democratic" : "Republican"
 
@@ -41,19 +45,37 @@ export default function General({
 
 	const [responseInput, setResponseInput] = useState("")
 
+	const [otherResponse, setOtherResponse] = useState("")
+
+	const updateResponse = useOpponentRealtimeResponse({
+		channelPromise,
+		role,
+		election: "General",
+		onContent: setOtherResponse,
+	})
+
+	useEffect(() => {
+		setOtherResponse("")
+	}, [dialogueId])
+
+	useEffect(() => {
+		updateResponse(responseInput)
+	}, [updateResponse, responseInput])
+
 	const [secondsLeft, setSecondsLeft] = useState<number | undefined>(
-		dialogue.question ? 60 : 10
+		dialogue.question ? 60 : dialogue.id === 0 ? 60 : 10
 	)
 
 	useEffect(() => {
-		setSecondsLeft(dialogue.question ? 60 : 10)
-	}, [dialogue])
+		setSecondsLeft(dialogue.question ? 60 : dialogue.id === 0 ? 60 : 10)
+	}, [dialogue, reaction])
 
 	const submitting = secondsLeft === undefined && dialogue.question
 
 	useEffect(() => {
 		const submitAt = new Date(
-			new Date().valueOf() + (dialogue.question ? 30 : 10) * 1000
+			new Date().valueOf() +
+				(dialogue.question ? 60 : dialogue.id === 0 ? 60 : 10) * 1000
 		)
 
 		const updateSecondsLeft = () => {
@@ -75,7 +97,7 @@ export default function General({
 		return () => {
 			clearInterval(intervalId)
 		}
-	}, [dialogue])
+	}, [dialogue, reaction])
 
 	useEffect(() => {
 		if (secondsLeft !== undefined && secondsLeft === 0) {
@@ -87,7 +109,7 @@ export default function General({
 				stage: "General",
 				response:
 					dialogue.question && reaction === undefined
-						? responseInput
+						? responseInput || "(No response)"
 						: undefined,
 			}).then(updateGame)
 		}
@@ -152,6 +174,21 @@ export default function General({
 							content={content}
 							responseInput={responseInput}
 							setResponseInput={setResponseInput}
+							otherName={
+								players[
+									{
+										DemocraticIncumbent:
+											"Republican" as const,
+										DemocraticNewcomer:
+											"Republican" as const,
+										RepublicanIncumbent:
+											"Democratic" as const,
+										RepublicanNewcomer:
+											"Democratic" as const,
+									}[role]
+								].name
+							}
+							otherResponse={otherResponse}
 							submitting={submitting}
 						/>
 					) : (
