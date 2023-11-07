@@ -20,6 +20,16 @@ const RepublicanPrimaryDialogue: ({
 	  }
 ))[] = [
 	{
+		id: 0,
+		content: `You'll be competing in a simulated U.S. presidential election against 3 other players. The game has two phases: the primary election, where you vie to become your party's nominee, and the general election, where nominees from each party battle to become President.
+
+During the game, you'll respond to political questions based on your assigned party and the current phase of the election. Your performance will be judged by an AI, considering the state you're campaigning in, which party you belong to, and the current phase of the election.
+
+Your responses earn you delegates in the primary and electoral votes in the general election. The player with the most delegates or electoral votes at the end of each phase wins that part of the election.`,
+		question: false,
+		state: undefined,
+	},
+	{
 		id: 1,
 		incumbentContent: `You're a previous Republican president running for reelection, and you're heading into the primary elections. Note that most states in the Republican primaries incorporate elements of both proportional delegate allocation (when delegates are allocated proportionally to the percentage of votes a candidate wins) and winner-take-all delegate allocation (when delegates are allocated solely to the candidate winning the plurality of votes), though this has no actual effect on gameplay.
 

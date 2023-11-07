@@ -58,7 +58,7 @@ export default function Primary({ gameId, role, dialogueId, players }: Props) {
 	)
 
 	useEffect(() => {
-		setSecondsLeft(dialogue.question ? 30 : 10)
+		setSecondsLeft(dialogue.question ? 30 : dialogue.id === 0 ? 60 : 10)
 	}, [dialogue])
 
 	const submitting = secondsLeft === undefined && dialogue.question

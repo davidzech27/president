@@ -15,6 +15,8 @@ import RepublicanPrimaryDialogue, {
 	REPUBLICAN_PRIMARY_QUESTION_COUNT,
 } from "~/dialogue/RepublicanPrimary"
 import GeneralDialogue, { GENERAL_QUESTION_COUNT } from "~/dialogue/General"
+import ratePrimaryDebate from "~/ai/ratePrimaryDebate"
+import rateGeneralDebate from "~/ai/rateGeneralDebate"
 
 // assumes that neither election begins or ends with a question
 
@@ -121,14 +123,16 @@ const continueDialogueAction = validate(
 
 		revalidatePath(`/game/${gameId}`)
 	} else {
-		const dialogue = {
-			Democratic: DemocraticPrimaryDialogue,
-			Republican: RepublicanPrimaryDialogue,
-		}[party].find(({ id }) => id === dialogueId)
-
-		if (dialogue === undefined) throw new Error("Dialogue not found")
-
 		if (stage === "Primary") {
+			const dialogue = {
+				Democratic: DemocraticPrimaryDialogue.find(
+					({ id }) => id === dialogueId
+				),
+				Republican: RepublicanPrimaryDialogue.find(
+					({ id }) => id === dialogueId
+				),
+			}
+
 			const responses = await db.transaction(async (tx) => {
 				const [[questionRow], [otherQuestionRow]] = await Promise.all([
 					tx
@@ -207,11 +211,41 @@ const continueDialogueAction = validate(
 			)
 				return
 
+			const [democraticAIResponse, republicanAIResponse] =
+				await Promise.all([
+					ratePrimaryDebate({
+						party: "Democratic",
+						question:
+							dialogue.Democratic !== undefined &&
+							"content" in dialogue.Democratic
+								? dialogue.Democratic.content
+								: "",
+						state: dialogue.Democratic?.state ?? "",
+						responses: {
+							Incumbent: responses.DemocraticIncumbent,
+							Newcomer: responses.DemocraticNewcomer,
+						},
+					}),
+					ratePrimaryDebate({
+						party: "Republican",
+						question:
+							dialogue.Republican !== undefined &&
+							"content" in dialogue.Republican
+								? dialogue.Republican.content
+								: "",
+						state: dialogue.Republican?.state ?? "",
+						responses: {
+							Incumbent: responses.RepublicanIncumbent,
+							Newcomer: responses.RepublicanNewcomer,
+						},
+					}),
+				])
+
 			const ratings = {
-				DemocraticIncumbent: 5,
-				DemocraticNewcomer: 7,
-				RepublicanIncumbent: 5,
-				RepublicanNewcomer: 7,
+				DemocraticIncumbent: democraticAIResponse.ratings.Incumbent,
+				DemocraticNewcomer: democraticAIResponse.ratings.Newcomer,
+				RepublicanIncumbent: republicanAIResponse.ratings.Incumbent,
+				RepublicanNewcomer: republicanAIResponse.ratings.Newcomer,
 			}
 
 			const portions = {
@@ -292,6 +326,8 @@ const continueDialogueAction = validate(
 						.onConflictDoNothing(),
 			])
 		} else if (stage === "General") {
+			const dialogue = GeneralDialogue.find(({ id }) => id === dialogueId)
+
 			const [questionRow] = await db
 				.update(question)
 				.set({
@@ -311,8 +347,8 @@ const continueDialogueAction = validate(
 				.all()
 
 			const responses = {
-				Democratic: questionRow?.democraticResponse,
-				Republican: questionRow?.republicanResponse,
+				Democratic: questionRow?.democraticResponse ?? undefined,
+				Republican: questionRow?.republicanResponse ?? undefined,
 			}
 
 			if (
@@ -321,9 +357,21 @@ const continueDialogueAction = validate(
 			)
 				return
 
+			const generalAIResponse = await rateGeneralDebate({
+				question:
+					dialogue !== undefined && "content" in dialogue
+						? dialogue.content
+						: "",
+				state: dialogue?.state ?? "",
+				responses: {
+					Democratic: responses.Democratic,
+					Republican: responses.Republican,
+				},
+			})
+
 			const ratings = {
-				Democratic: 5,
-				Republican: 7,
+				Democratic: generalAIResponse.ratings.Democratic,
+				Republican: generalAIResponse.ratings.Republican,
 			}
 
 			const portions = {
