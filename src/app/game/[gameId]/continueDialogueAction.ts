@@ -273,6 +273,7 @@ const continueDialogueAction = validate(
 					.set({
 						incumbentPortion: portions.DemocraticIncumbent,
 						newcomerPortion: portions.DemocraticNewcomer,
+						reaction: democraticAIResponse.reaction,
 					})
 					.where(
 						and(
@@ -286,6 +287,7 @@ const continueDialogueAction = validate(
 					.set({
 						incumbentPortion: portions.RepublicanIncumbent,
 						newcomerPortion: portions.RepublicanNewcomer,
+						reaction: republicanAIResponse.reaction,
 					})
 					.where(
 						and(
@@ -294,36 +296,6 @@ const continueDialogueAction = validate(
 							eq(question.dialogueId, dialogueId)
 						)
 					),
-				db
-					.update(game)
-					.set({
-						primaryDialogueId: dialogueId + 1,
-					})
-					.where(eq(game.id, gameId)),
-				DemocraticPrimaryDialogue.find(
-					({ id }) => id === dialogueId + 1
-				)?.question &&
-					db
-						.insert(question)
-						.values({
-							gameId,
-							election: "DemocraticPrimary",
-							dialogueId: dialogueId + 1,
-							presentedAt: new Date(),
-						})
-						.onConflictDoNothing(),
-				RepublicanPrimaryDialogue.find(
-					({ id }) => id === dialogueId + 1
-				)?.question &&
-					db
-						.insert(question)
-						.values({
-							gameId,
-							election: "RepublicanPrimary",
-							dialogueId: dialogueId + 1,
-							presentedAt: new Date(),
-						})
-						.onConflictDoNothing(),
 			])
 		} else if (stage === "General") {
 			const dialogue = GeneralDialogue.find(({ id }) => id === dialogueId)
@@ -391,6 +363,7 @@ const continueDialogueAction = validate(
 					.set({
 						democraticPortion: portions.Democratic,
 						republicanPortion: portions.Republican,
+						reaction: generalAIResponse.reaction,
 					})
 					.where(
 						and(
@@ -399,23 +372,6 @@ const continueDialogueAction = validate(
 							eq(question.dialogueId, dialogueId)
 						)
 					),
-				db
-					.update(game)
-					.set({
-						generalDialogueId: dialogueId + 1,
-					})
-					.where(eq(game.id, gameId)),
-				GeneralDialogue.find(({ id }) => id === dialogueId + 1)
-					?.question &&
-					(await db
-						.insert(question)
-						.values({
-							gameId,
-							election: "General",
-							dialogueId: dialogueId + 1,
-							presentedAt: new Date(),
-						})
-						.onConflictDoNothing()),
 			])
 		}
 	}

@@ -69,9 +69,9 @@ Question: """${question}"""
 Democratic candidate response: """${responses.Democratic}"""
 Republican candidate response: """${responses.Republican}"""
 
-Given that this is a presidential debate in the state of ${state} leading up to the general election, provide a brief summary of a simulated reaction to what each candidate said. Then, assign each candidate a rating out of 10 as to how well their responses impacted their presidential campaign.
+Given that this is a presidential debate in the state of ${state} leading up to the general election, narrate the nation's reaction to what each candidate said. Then, assign each candidate a rating out of 10 as to how well their responses impacted their presidential campaign.
 
-Use the following format:
+Output the following format alone:
 Reaction: string
 Democratic candidate rating: number
 Republican candidate rating: number

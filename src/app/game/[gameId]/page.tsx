@@ -49,6 +49,7 @@ export default async function GamePage({ params }: { params: unknown }) {
 				republicanResponse: question.republicanResponse,
 				democraticPortion: question.democraticPortion,
 				republicanPortion: question.republicanPortion,
+				reaction: question.reaction,
 				presentedAt: question.presentedAt,
 			})
 			.from(question)
@@ -66,6 +67,7 @@ export default async function GamePage({ params }: { params: unknown }) {
 			newcomerResponse: questionRow.newcomerResponse ?? undefined,
 			incumbentPortion: questionRow.incumbentPortion ?? undefined,
 			newcomerPortion: questionRow.newcomerPortion ?? undefined,
+			reaction: questionRow.reaction ?? undefined,
 			presentedAt: questionRow.presentedAt,
 		}))
 
@@ -77,6 +79,7 @@ export default async function GamePage({ params }: { params: unknown }) {
 			newcomerResponse: questionRow.newcomerResponse ?? undefined,
 			incumbentPortion: questionRow.incumbentPortion ?? undefined,
 			newcomerPortion: questionRow.newcomerPortion ?? undefined,
+			reaction: questionRow.reaction ?? undefined,
 			presentedAt: questionRow.presentedAt,
 		}))
 
@@ -88,6 +91,7 @@ export default async function GamePage({ params }: { params: unknown }) {
 			republicanResponse: questionRow.republicanResponse ?? undefined,
 			democraticPortion: questionRow.democraticPortion ?? undefined,
 			republicanPortion: questionRow.republicanPortion ?? undefined,
+			reaction: questionRow.reaction ?? undefined,
 			presentedAt: questionRow.presentedAt,
 		}))
 
@@ -209,11 +213,28 @@ export default async function GamePage({ params }: { params: unknown }) {
 								stage: "Primary",
 								dialogueId: gameRow.primaryDialogueId ?? -1, // not sure why unable to narrow
 								players: primaryPlayers,
+								reactions: {
+									Democratic: democraticPrimaryQuestions.find(
+										(question) =>
+											question.dialogueId ===
+											gameRow.primaryDialogueId
+									)?.reaction,
+									Republican: republicanPrimaryQuestions.find(
+										(question) =>
+											question.dialogueId ===
+											gameRow.primaryDialogueId
+									)?.reaction,
+								},
 						  }
 						: {
 								stage: "General",
 								dialogueId: gameRow.generalDialogueId,
 								players: generalPlayers,
+								reaction: generalQuestions.find(
+									(question) =>
+										question.dialogueId ===
+										gameRow.generalDialogueId
+								)?.reaction,
 						  }
 					: {
 							stage: "Finished",

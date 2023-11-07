@@ -21,9 +21,16 @@ interface Props {
 		Democratic: { name: string; portion: number }
 		Republican: { name: string; portion: number }
 	}
+	reaction: string | undefined
 }
 
-export default function General({ gameId, role, dialogueId, players }: Props) {
+export default function General({
+	gameId,
+	role,
+	dialogueId,
+	players,
+	reaction,
+}: Props) {
 	const updateGame = useGameUpdates({ gameId })
 
 	const party = role.startsWith("Democratic") ? "Democratic" : "Republican"
@@ -35,11 +42,11 @@ export default function General({ gameId, role, dialogueId, players }: Props) {
 	const [responseInput, setResponseInput] = useState("")
 
 	const [secondsLeft, setSecondsLeft] = useState<number | undefined>(
-		dialogue.question ? 30 : 10
+		dialogue.question ? 60 : 10
 	)
 
 	useEffect(() => {
-		setSecondsLeft(dialogue.question ? 30 : 10)
+		setSecondsLeft(dialogue.question ? 60 : 10)
 	}, [dialogue])
 
 	const submitting = secondsLeft === undefined && dialogue.question
@@ -78,7 +85,10 @@ export default function General({ gameId, role, dialogueId, players }: Props) {
 				gameId,
 				dialogueId,
 				stage: "General",
-				response: dialogue.question ? responseInput : undefined,
+				response:
+					dialogue.question && reaction === undefined
+						? responseInput
+						: undefined,
 			}).then(updateGame)
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -137,12 +147,16 @@ export default function General({ gameId, role, dialogueId, players }: Props) {
 
 			<div className="w-full flex-1 rounded-lg border border-white">
 				{dialogue.question ? (
-					<Question
-						content={content}
-						responseInput={responseInput}
-						setResponseInput={setResponseInput}
-						submitting={submitting}
-					/>
+					reaction === undefined ? (
+						<Question
+							content={content}
+							responseInput={responseInput}
+							setResponseInput={setResponseInput}
+							submitting={submitting}
+						/>
+					) : (
+						<Message content={reaction} />
+					)
 				) : (
 					<Message content={content} />
 				)}

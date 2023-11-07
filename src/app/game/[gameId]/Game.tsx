@@ -31,6 +31,10 @@ interface Props {
 					RepublicanIncumbent: { name: string; portion: number }
 					RepublicanNewcomer: { name: string; portion: number }
 				}
+				reactions: {
+					Democratic: string | undefined
+					Republican: string | undefined
+				}
 		  }
 		| {
 				stage: "General"
@@ -53,6 +57,7 @@ interface Props {
 						portion: number | undefined
 					}
 				}
+				reaction: string | undefined
 		  }
 		| {
 				stage: "Finished"
@@ -100,6 +105,16 @@ export default function Game({ gameId, role, gameState }: Props) {
 							? gameState.players.DemocraticNewcomer
 							: gameState.players.RepublicanNewcomer,
 				}}
+				reaction={
+					gameState.reactions[
+						{
+							DemocraticIncumbent: "Democratic" as const,
+							DemocraticNewcomer: "Democratic" as const,
+							RepublicanIncumbent: "Republican" as const,
+							RepublicanNewcomer: "Republican" as const,
+						}[role]
+					]
+				}
 			/>
 		)
 	}
@@ -139,6 +154,7 @@ export default function Game({ gameId, role, gameState }: Props) {
 				role={role}
 				dialogueId={gameState.dialogueId}
 				players={generalPlayers}
+				reaction={gameState.reaction}
 			/>
 		)
 	}

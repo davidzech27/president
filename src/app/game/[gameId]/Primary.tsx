@@ -26,15 +26,20 @@ interface Props {
 		Incumbent: { name: string; portion: number }
 		Newcomer: { name: string; portion: number }
 	}
+	reaction: string | undefined
 }
 
-export default function Primary({ gameId, role, dialogueId, players }: Props) {
+export default function Primary({
+	gameId,
+	role,
+	dialogueId,
+	players,
+	reaction,
+}: Props) {
 	const updateGame = useGameUpdates({ gameId })
 
 	useEffect(() => {
-		if (dialogueId !== 1) return
-
-		void updateGame()
+		if (dialogueId === 0) updateGame()
 	}, [updateGame, dialogueId])
 
 	const party = role.startsWith("Democratic") ? "Democratic" : "Republican"
@@ -54,11 +59,11 @@ export default function Primary({ gameId, role, dialogueId, players }: Props) {
 	const [responseInput, setResponseInput] = useState("")
 
 	const [secondsLeft, setSecondsLeft] = useState<number | undefined>(
-		dialogue.question ? 30 : 10
+		dialogue.question ? 60 : dialogue.id === 0 ? 60 : 10
 	)
 
 	useEffect(() => {
-		setSecondsLeft(dialogue.question ? 30 : dialogue.id === 0 ? 60 : 10)
+		setSecondsLeft(dialogue.question ? 60 : dialogue.id === 0 ? 60 : 10)
 	}, [dialogue])
 
 	const submitting = secondsLeft === undefined && dialogue.question
@@ -97,7 +102,10 @@ export default function Primary({ gameId, role, dialogueId, players }: Props) {
 				gameId,
 				dialogueId,
 				stage: "Primary",
-				response: dialogue.question ? responseInput : undefined,
+				response:
+					dialogue.question && reaction === undefined
+						? responseInput
+						: undefined,
 			}).then(updateGame)
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -153,12 +161,16 @@ export default function Primary({ gameId, role, dialogueId, players }: Props) {
 
 			<div className="w-full flex-1 rounded-lg border border-white">
 				{dialogue.question ? (
-					<Question
-						content={content}
-						responseInput={responseInput}
-						setResponseInput={setResponseInput}
-						submitting={submitting}
-					/>
+					reaction === undefined ? (
+						<Question
+							content={content}
+							responseInput={responseInput}
+							setResponseInput={setResponseInput}
+							submitting={submitting}
+						/>
+					) : (
+						<Message content={reaction} />
+					)
 				) : (
 					<Message content={content} />
 				)}

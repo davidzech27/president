@@ -44,6 +44,7 @@ export const question = sqliteTable(
 		republicanResponse: text("republican_response"),
 		democraticPortion: integer("democratic_portion"),
 		republicanPortion: integer("republican_portion"),
+		reaction: text("reaction"),
 		presentedAt: integer("presented_at", { mode: "timestamp" }).notNull(),
 	},
 	(table) => ({
